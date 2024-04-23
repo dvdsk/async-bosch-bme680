@@ -75,21 +75,31 @@ impl From<GasWaitDuration> for Duration {
 // Ctrl_meas content. Register 0x74
 bitfield! {
     pub struct CtrlMeasurement(u8);
-    impl defmt::Format;
     u8;
     pub from into Oversampling, temperature_os, set_temperature_os: 7, 5;
     pub from into Oversampling, pressure_os, set_pressure_os: 4, 2;
     pub from into SensorMode, mode, set_mode: 1, 0;
 }
 
+impl defmt::Format for CtrlMeasurement {
+    fn format(&self, fmt: defmt::Formatter) {
+        defmt::write!(fmt, "CtrlMeasurement({:b})", self.0)
+    }
+}
+
 bitfield! {
     pub struct MeasurementStatus(u8);
-    impl defmt::Format;
     u8;
     pub bool, new_data, _: 7;
     pub bool, gas_measuring, _: 6;
     pub bool, measuring, _: 5;
     pub gas_meas_index, _: 3, 0;
+}
+
+impl defmt::Format for MeasurementStatus {
+    fn format(&self, fmt: defmt::Formatter) {
+        defmt::write!(fmt, "MeasurementStatus({:b})", self.0)
+    }
 }
 
 // 15 long
@@ -110,7 +120,6 @@ bitfield! {
 // 14: gas_r_lsb    0x2B
 bitfield! {
     pub struct RawData([u8]);
-    impl defmt::Format;
 
     pub u8, gas_range, _: calc_position(3, 14), calc_position(0, 14);
     // Each measuring cycle contains a  gas measurement slot, either a real one or a dummy one.
@@ -131,6 +140,12 @@ bitfield! {
     pub bool, gas_measuring, _: calc_position(6, 0);
     // true if data is available
     pub bool, new_data, _: calc_position(7, 0);
+}
+
+impl<T: defmt::Format> defmt::Format for RawData<T> {
+    fn format(&self, fmt: defmt::Formatter) {
+        defmt::write!(fmt, "RawData({:b})", self.0)
+    }
 }
 
 /// Temperature/Pressure adc values. 20 bits consisting of msb, lsb, xlsb
