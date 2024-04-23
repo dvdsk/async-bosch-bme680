@@ -17,8 +17,8 @@ use constants::{
     CYCLE_DURATION, GAS_MEAS_DURATION, LEN_CONFIG, TPH_SWITCHING_DURATION, WAKEUP_DURATION,
 };
 use data::CalibrationData;
-use embedded_hal::delay::DelayNs;
-use embedded_hal::i2c::{I2c, SevenBitAddress};
+use embedded_hal_async::delay::DelayNs;
+use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 use i2c_helper::I2CHelper;
 
 pub use self::config::{Configuration, DeviceAddress, GasConfig, IIRFilter, Oversampling};

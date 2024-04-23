@@ -1,5 +1,5 @@
 use core::fmt::Formatter;
-use embedded_hal::i2c::{I2c, SevenBitAddress};
+use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 
 
 /// All possible errors
@@ -11,9 +11,9 @@ where
     WriteError(I2C::Error),
     /// Error during I2C WriteRead operation.
     WriteReadError(I2C::Error),
-    /// Got an unexpected ChipId during sensor initalization.
+    /// Got an unexpected ChipId during sensor initialization.
     UnexpectedChipId(u8),
-    /// After running the measurment the sensor blocks until the 'new data bit' of the sensor is set.
+    /// After running the measurement the sensor blocks until the 'new data bit' of the sensor is set.
     /// Should this take more than 5 tries an error is returned instead of incorrect data.
     MeasuringTimeOut,
 }

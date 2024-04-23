@@ -1,6 +1,6 @@
 use defmt::debug;
-use embedded_hal::delay::DelayNs;
-use embedded_hal::i2c::{I2c, SevenBitAddress};
+use embedded_hal_async::delay::DelayNs;
+use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 
 use crate::bitfields::{CtrlMeasurement, RawConfig, RawData};
 use crate::config::{Configuration, GasConfig, SensorMode, Variant};
