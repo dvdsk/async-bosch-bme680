@@ -57,18 +57,19 @@ where
     /// # Arguments
     /// * `delayer` - Used to wait for the triggered measurement to finish
     /// * `ambient_temperature` - Needed to calculate the heater target temperature
-    pub fn new(
+    pub async fn new(
         i2c_interface: I2C,
         device_address: DeviceAddress,
         delayer: D,
         sensor_config: &Configuration,
         ambient_temperature: i32,
     ) -> Result<Self, BmeError<I2C>> {
-        let mut i2c = I2CHelper::new(i2c_interface, device_address, delayer, ambient_temperature)?;
+        let mut i2c =
+            I2CHelper::new(i2c_interface, device_address, delayer, ambient_temperature).await?;
 
-        let calibration_data = i2c.get_calibration_data()?;
-        let sensor_config = i2c.set_config(sensor_config, &calibration_data)?;
-        let variant = i2c.get_variant_id()?;
+        let calibration_data = i2c.get_calibration_data().await?;
+        let sensor_config = i2c.set_config(sensor_config, &calibration_data).await?;
+        let variant = i2c.get_variant_id().await?;
         let bme = Self {
             i2c,
             calibration_data,
@@ -83,12 +84,12 @@ where
         self.i2c.into_inner()
     }
 
-    fn put_to_sleep(&mut self) -> Result<(), BmeError<I2C>> {
-        self.i2c.set_mode(SensorMode::Sleep)
+    async fn put_to_sleep(&mut self) -> Result<(), BmeError<I2C>> {
+        self.i2c.set_mode(SensorMode::Sleep).await
     }
-    pub fn set_configuration(&mut self, config: &Configuration) -> Result<(), BmeError<I2C>> {
-        self.put_to_sleep()?;
-        let new_config = self.i2c.set_config(config, &self.calibration_data)?;
+    pub async fn set_configuration(&mut self, config: &Configuration) -> Result<(), BmeError<I2C>> {
+        self.put_to_sleep().await?;
+        let new_config = self.i2c.set_config(config, &self.calibration_data).await?;
         // current conf is used to calculate measurement delay period
         self.sensor_config = new_config;
         Ok(())
@@ -99,13 +100,13 @@ where
     // Sets the sensor mode to forced
     // Tries to wait 5 times for new data with a delay calculated based on the set sensor config
     // If no new data could be read in those 5 attempts a Timeout error is returned
-    pub fn measure(&mut self) -> Result<MeasurementData, BmeError<I2C>> {
-        self.i2c.set_mode(SensorMode::Forced)?;
+    pub async fn measure(&mut self) -> Result<MeasurementData, BmeError<I2C>> {
+        self.i2c.set_mode(SensorMode::Forced).await?;
         let delay_period = self.calculate_delay_period_us();
-        self.i2c.delay(delay_period);
+        self.i2c.delay(delay_period).await;
         // try read new values 5 times and delay if no new data is available or the sensor is still measuring
         for _i in 0..5 {
-            let raw_data = self.i2c.get_field_data()?;
+            let raw_data = self.i2c.get_field_data().await?;
             if !raw_data.measuring() && raw_data.new_data() {
                 let (temperature, t_fine) =
                     calculate_temperature(raw_data.temperature_adc().0, &self.calibration_data);
@@ -134,7 +135,7 @@ where
                 };
                 return Ok(data);
             } else {
-                self.i2c.delay(delay_period);
+                self.i2c.delay(delay_period).await;
             }
         }
         // Shouldn't happen
