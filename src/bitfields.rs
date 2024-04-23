@@ -4,7 +4,7 @@ use core::time::Duration;
 
 bitfield! {
     pub struct RawConfig([u8]);
-    impl Debug;
+    impl defmt::Format;
     u8;
     // 0x75<4:2>
     pub from into IIRFilter, filter, set_filter : calc_position(4, 4), calc_position(2, 4);
@@ -53,12 +53,12 @@ impl RawConfig<[u8; 5]> {
 
 bitfield! {
     pub struct RawGasConfig([u8]);
-    impl Debug;
+    impl defmt::Format;
     u8;
     pub res_heat, _: 7, 0;
     pub from into GasWaitDuration, gas_wait, _: calc_position(7, 1), calc_position(0, 1);
 }
-#[derive(Debug)]
+#[derive(defmt::Format)]
 pub struct GasWaitDuration(Duration);
 impl From<u8> for GasWaitDuration {
     fn from(val: u8) -> Self {
@@ -75,7 +75,7 @@ impl From<GasWaitDuration> for Duration {
 // Ctrl_meas content. Register 0x74
 bitfield! {
     pub struct CtrlMeasurement(u8);
-    impl Debug;
+    impl defmt::Format;
     u8;
     pub from into Oversampling, temperature_os, set_temperature_os: 7, 5;
     pub from into Oversampling, pressure_os, set_pressure_os: 4, 2;
@@ -84,7 +84,7 @@ bitfield! {
 
 bitfield! {
     pub struct MeasurementStatus(u8);
-    impl Debug;
+    impl defmt::Format;
     u8;
     pub bool, new_data, _: 7;
     pub bool, gas_measuring, _: 6;
@@ -110,7 +110,7 @@ bitfield! {
 // 14: gas_r_lsb    0x2B
 bitfield! {
     pub struct RawData([u8]);
-    impl Debug;
+    impl defmt::Format;
 
     pub u8, gas_range, _: calc_position(3, 14), calc_position(0, 14);
     // Each measuring cycle contains a  gas measurement slot, either a real one or a dummy one.
@@ -134,7 +134,7 @@ bitfield! {
 }
 
 /// Temperature/Pressure adc values. 20 bits consisting of msb, lsb, xlsb
-#[derive(Debug)]
+#[derive(defmt::Format)]
 pub struct Measurement(pub u32);
 impl From<u32> for Measurement {
     fn from(value: u32) -> Self {
@@ -144,7 +144,7 @@ impl From<u32> for Measurement {
 }
 
 /// Humidity adc value. 16 bits
-#[derive(Debug)]
+#[derive(defmt::Format)]
 pub struct Humidity(pub u16);
 impl From<u16> for Humidity {
     fn from(value: u16) -> Self {
@@ -155,7 +155,7 @@ impl From<u16> for Humidity {
 }
 
 /// gas adc value. 10 bits
-#[derive(Debug)]
+#[derive(defmt::Format)]
 pub struct GasADC(pub u16);
 impl From<u16> for GasADC {
     fn from(value: u16) -> Self {
@@ -184,7 +184,7 @@ mod tests {
 
     bitfield! {
         pub struct SampleData([u8]);
-        impl Debug;
+        impl defmt::Format;
         pub u32, from into Measurement, m, _: calc_position(7, 2), calc_position(0, 0);
         pub u16, from into Humidity, h, _: calc_position(7,4), calc_position(0, 3);
     }

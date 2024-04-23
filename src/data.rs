@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(defmt::Format)]
 pub struct CalibrationData {
     // Temperature coefficients
     pub par_t1: u16,
@@ -35,7 +35,7 @@ pub struct CalibrationData {
 }
 
 /// Measurement data returned from the sensor
-#[derive(Debug)]
+#[derive(defmt::Format)]
 pub struct MeasurementData {
     /// Temperature in °C
     pub temperature: f32,

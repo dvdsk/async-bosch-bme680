@@ -75,7 +75,7 @@ impl Variant {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(defmt::Format, PartialEq, Eq)]
 pub enum SensorMode {
     Sleep,
     Forced,
@@ -101,7 +101,7 @@ impl From<u8> for SensorMode {
 
 /// Used to enable gas measurement.
 /// Default values are 150ms heater duration and 300°C heater target temperature
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(defmt::Format, Clone, PartialEq, Eq)]
 pub struct GasConfig {
     heater_duration: Duration,
     heater_target_temperature: u16,
@@ -181,7 +181,7 @@ impl GasConfig {
 ///                         
 /// # }
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(defmt::Format, Clone, PartialEq, Eq)]
 pub struct Configuration {
     pub temperature_oversampling: Option<Oversampling>,
     pub pressure_oversampling: Option<Oversampling>,
@@ -247,7 +247,7 @@ impl ConfigBuilder {
 /// Oversampling settings for temperature, humidity, pressure.
 /// Skipping means no measurement will be taken, which is not recommended for the temperature
 /// as it's needed to calculate the adjusted values for hummidiy and pressure.
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(defmt::Format, Eq, PartialEq, Clone)]
 pub enum Oversampling {
     Skipped,
     By1,
@@ -295,7 +295,7 @@ impl From<Oversampling> for u8 {
 }
 
 /// IIR filter control only applies to temperature and pressure data.
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(defmt::Format, Eq, PartialEq, Clone)]
 pub enum IIRFilter {
     Coeff0,
     Coeff1,
@@ -336,7 +336,7 @@ impl From<IIRFilter> for u8 {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(defmt::Format, Eq, PartialEq, Clone)]
 pub enum HeaterProfile {
     Profile0,
     Profile1,
