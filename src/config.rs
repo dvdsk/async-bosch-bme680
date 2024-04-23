@@ -1,6 +1,6 @@
 use core::time::Duration;
 
-use log::warn;
+use defmt::warn;
 
 use crate::{
     constants::{GAS_ARRAY_1, GAS_ARRAY_2, MAX_HEATER_TEMPERATURE, MAX_HEATER_WAIT_DURATION_MS},
@@ -99,7 +99,7 @@ impl From<u8> for SensorMode {
     }
 }
 
-/// Used to enable gas measurment.
+/// Used to enable gas measurement.
 /// Default values are 150ms heater duration and 300°C heater target temperature
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GasConfig {
@@ -122,7 +122,10 @@ impl GasConfig {
         let mut factor: u8 = 0;
 
         if duration >= MAX_HEATER_WAIT_DURATION_MS {
-            warn!("Specified heater duration longer than {MAX_HEATER_WAIT_DURATION_MS}ms. Setting to {MAX_HEATER_WAIT_DURATION_MS}ms instead.");
+            warn!(
+                "Specified heater duration longer than {}ms. Setting to {}ms instead.",
+                MAX_HEATER_WAIT_DURATION_MS, MAX_HEATER_WAIT_DURATION_MS
+            );
             0xff /* Max duration*/
         } else {
             while duration > 0x3F {
@@ -140,8 +143,9 @@ impl GasConfig {
         // cap at 400°C
         let target_temperature = if self.heater_target_temperature > MAX_HEATER_TEMPERATURE {
             warn!(
-                "Specified heater target temperature higher than {MAX_HEATER_TEMPERATURE}°C. Setting to 400°C instead."  
-          );
+                "Specified heater target temperature higher than {}°C. Setting to 400°C instead.",
+                MAX_HEATER_TEMPERATURE
+            );
             400u16
         } else {
             self.heater_target_temperature
@@ -171,7 +175,7 @@ impl GasConfig {
 ///                     .pressure_oversampling(Oversampling::By16)
 ///                     .humidity_oversampling(Oversampling::By1)
 ///                     .filter(IIRFilter::Coeff1)
-///                     // Gas measurment is enabled by default. To disable it pass None as the GasConfig
+///                     // Gas measurement is enabled by default. To disable it pass None as the GasConfig
 ///                     .gas_config(None)
 ///                     .build();
 ///                         
@@ -241,7 +245,7 @@ impl ConfigBuilder {
     }
 }
 /// Oversampling settings for temperature, humidity, pressure.
-/// Skipping means no measurment will be taken, which is not recommended for the temperature
+/// Skipping means no measurement will be taken, which is not recommended for the temperature
 /// as it's needed to calculate the adjusted values for hummidiy and pressure.
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Oversampling {

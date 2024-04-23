@@ -34,9 +34,9 @@ pub struct CalibrationData {
     pub range_sw_err: i8,
 }
 
-/// Measurment data returned from the sensor
+/// Measurement data returned from the sensor
 #[derive(Debug)]
-pub struct MeasurmentData {
+pub struct MeasurementData {
     /// Temperature in °C
     pub temperature: f32,
     /// Relative humidity in %
@@ -44,10 +44,9 @@ pub struct MeasurmentData {
     /// Pressure in hPa
     pub pressure: f32,
     /// Gas resistance in Ohms
-    /// None if gas measurment is disabled or gas measurment hasn't finished in time according to the gas_measuring bit.
+    /// None if gas measurement is disabled or gas measurement hasn't finished in time according to the gas_measuring bit.
     pub gas_resistance: Option<f32>,
 }
-
 
 pub fn calculate_temperature(adc_temp: u32, calibration_data: &CalibrationData) -> (f32, f32) {
     let temp_adc = adc_temp as f32;
@@ -103,7 +102,7 @@ pub fn calculate_humidity(adc_hum: u16, calibration_data: &CalibrationData, t_fi
     let var4 = calibration_data.par_h7 as f32 / 2097152.;
     let mut calc_hum = var2 + ((var3 + (var4 * temp_comp)) * var2 * var2);
     calc_hum = calc_hum.clamp(0., 100.);
-    // Reference implemetation uses this.
+    // Reference implementation uses this.
     // if calc_hum > 100. {
     //     calc_hum = 100.;
     // } else if calc_hum < 0. {
@@ -114,8 +113,10 @@ pub fn calculate_humidity(adc_hum: u16, calibration_data: &CalibrationData, t_fi
 
 #[cfg(test)]
 mod tests {
-    use approx::{assert_abs_diff_eq, assert_relative_eq, relative_eq};
-    use crate::data::{calculate_humidity, calculate_pressure, calculate_temperature, CalibrationData};
+    use crate::data::{
+        calculate_humidity, calculate_pressure, calculate_temperature, CalibrationData,
+    };
+    use approx::assert_abs_diff_eq;
 
     static CALIBRATION_DATA: CalibrationData = CalibrationData {
         par_t1: 25942,
@@ -145,8 +146,6 @@ mod tests {
         res_heat_val: 30,
         range_sw_err: 0,
     };
-
-
 
     #[test]
     fn test_calc_temp() {
@@ -179,17 +178,16 @@ mod tests {
         // hum_adc: 25549, calc_hum: 59.537392, tfine: 109531.328125
 
         let pairs = [
-            (25537,59.469585,109842.234375),
-            (25531,59.410557,109090.187500),
-            (25545,59.515030,109643.640625),
-            (25535,59.431923,108942.054688),
-            (25549,59.537392,109531.328125),
+            (25537, 59.469585, 109842.234375),
+            (25531, 59.410557, 109090.187500),
+            (25545, 59.515030, 109643.640625),
+            (25535, 59.431923, 108942.054688),
+            (25549, 59.537392, 109531.328125),
         ];
         for (hum_adc, actual_hum, tfine) in pairs {
             let calc_hum = calculate_humidity(hum_adc, &CALIBRATION_DATA, tfine);
             assert_abs_diff_eq!(calc_hum, actual_hum);
         }
-
     }
     #[test]
     fn test_calc_pressure() {

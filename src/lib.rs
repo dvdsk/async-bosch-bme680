@@ -17,15 +17,13 @@ use constants::{
     CYCLE_DURATION, GAS_MEAS_DURATION, LEN_CONFIG, TPH_SWITCHING_DURATION, WAKEUP_DURATION,
 };
 use data::CalibrationData;
-use embedded_hal::{
-    delay::DelayNs,
-};
+use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 use i2c_helper::I2CHelper;
 
 pub use self::config::{Configuration, DeviceAddress, GasConfig, IIRFilter, Oversampling};
 use crate::data::{calculate_humidity, calculate_pressure, calculate_temperature};
-pub use data::MeasurmentData;
+pub use data::MeasurementData;
 pub use error::BmeError;
 
 mod bitfields;
@@ -101,7 +99,7 @@ where
     // Sets the sensor mode to forced
     // Tries to wait 5 times for new data with a delay calculated based on the set sensor config
     // If no new data could be read in those 5 attempts a Timeout error is returned
-    pub fn measure(&mut self) -> Result<MeasurmentData, BmeError<I2C>> {
+    pub fn measure(&mut self) -> Result<MeasurementData, BmeError<I2C>> {
         self.i2c.set_mode(SensorMode::Forced)?;
         let delay_period = self.calculate_delay_period_us();
         self.i2c.delay(delay_period);
@@ -128,7 +126,7 @@ where
                     None
                 };
 
-                let data = MeasurmentData {
+                let data = MeasurementData {
                     temperature,
                     gas_resistance,
                     humidity,
@@ -186,7 +184,6 @@ mod library_tests {
     use super::*;
     use embedded_hal_mock::eh1::delay::NoopDelay;
     use embedded_hal_mock::eh1::i2c::{Mock as I2cMock, Transaction as I2cTransaction};
-    use test_log::test;
 
     fn setup_transactions() -> Vec<I2cTransaction> {
         let mut transactions = vec![];

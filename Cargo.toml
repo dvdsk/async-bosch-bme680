@@ -1,5 +1,5 @@
 [package]
-authors = ["Jakob Lachermeier"]
+authors = ["Jakob Lachermeier", "David Kleingeld"]
 description = "A pure rust implementation for the BME680 environmental sensor"
 license = "MIT"
 name = "bosch-bme680"
@@ -10,16 +10,12 @@ readme = "README.md"
 version = "1.0.2"
 edition = "2021"
 
-
 [dependencies]
-embedded-hal = "1.0.0"
-log = "0.4"
+embedded-hal = { version = "1.0.0", features = ["defmt-03"] }
+embedded-hal-async = { version = "1.0.0", features = ["defmt-03"] }
+defmt = "0.3.6"
 bitfield = "0.14"
-
-
 
 [dev-dependencies]
 embedded-hal-mock = "0.10"
-test-log = "0.2"
-env_logger = "0.11"
 approx = "0.5.1"

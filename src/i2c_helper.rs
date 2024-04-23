@@ -1,8 +1,8 @@
+use defmt::debug;
 use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
-use log::debug;
 
-use crate::bitfields::{CtrlMeasurment, RawConfig, RawData};
+use crate::bitfields::{CtrlMeasurement, RawConfig, RawData};
 use crate::config::{Configuration, GasConfig, SensorMode, Variant};
 use crate::constants::{
     ADDRS_CONFIG, ADDR_CONFIG, ADDR_CONTROL_MODE, ADDR_GAS_WAIT_0, ADDR_RES_HEAT_0,
@@ -62,7 +62,7 @@ where
         self.delayer.delay_us(duration_us);
     }
     fn get_register(&mut self, address: u8) -> Result<u8, BmeError<I2C>> {
-        debug!("    Getting register: {address:x}.");
+        debug!("    Getting register: {:x}.", address);
         let mut buffer = [0; 1];
         self.i2c_interface
             .write_read(self.address, &[address], &mut buffer)
@@ -71,7 +71,8 @@ where
     }
     pub fn get_registers(&mut self, address: u8, buffer: &mut [u8]) -> Result<(), BmeError<I2C>> {
         debug!(
-            "   Getting register: {address:x} to {:x}. Length {} bytes.",
+            "   Getting register: {:x} to {:x}. Length {} bytes.",
+            address,
             buffer.len() + address as usize,
             buffer.len()
         );
@@ -81,7 +82,7 @@ where
         Ok(())
     }
     fn set_register(&mut self, address: u8, value: u8) -> Result<(), BmeError<I2C>> {
-        debug!("    Setting register {address:x} to {value:b}");
+        debug!("    Setting register {:x} to {:b}", address, value);
         self.i2c_interface
             .write(self.address, &[address, value])
             .map_err(BmeError::WriteError)
@@ -120,7 +121,7 @@ where
         debug!("Getting variant id");
         Ok(self.get_register(ADDR_VARIANT_ID)?.into())
     }
-    // fills buffer with content from 3 seperate reads
+    // fills buffer with content from 3 separate reads
     pub fn get_calibration_data(&mut self) -> Result<CalibrationData, BmeError<I2C>> {
         debug!("Getting calibration data");
         let mut coeff_buffer = [0; LEN_COEFF_ALL];
@@ -145,32 +146,32 @@ where
         // 2. Set last 2 bits to 00 (sleep) if not already in sleep mode
         // 3. Set last 2 bits to 01 (forced) if the requested mode is forced. Do nothing if the requested mode is sleep,
         // as the sensor has already been sent to sleep before.
-        debug!("Setting mode to {mode:?}");
+        debug!("Setting mode to {:?}", mode);
         let mut control_register = loop {
             debug!("Getting control register");
-            let mut control_register = CtrlMeasurment(self.get_register(ADDR_CONTROL_MODE)?);
+            let mut control_register = CtrlMeasurement(self.get_register(ADDR_CONTROL_MODE)?);
 
-            debug!("Current control_register: {control_register:?}");
+            debug!("Current control_register: {:?}", control_register);
             let current_mode = control_register.mode();
-            debug!("Current mode: {current_mode:?}");
+            debug!("Current mode: {:?}", current_mode);
             // Put sensor to sleep unless it already in sleep mode. Same as in the reference implementation
             match current_mode {
                 SensorMode::Sleep => break control_register,
                 SensorMode::Forced => {
                     control_register.set_mode(SensorMode::Sleep);
-                    debug!("Setting control register to: {control_register:?}");
+                    debug!("Setting control register to: {:?}", control_register);
                     self.set_register(ADDR_CONTROL_MODE, control_register.0)?;
                     self.delayer.delay_ms(DELAY_PERIOD_US);
                 }
             }
         };
-        debug!("Broke out of loop with control register: {control_register:?}");
+        debug!("Broke out of loop with control register: {:?}", control_register);
         match mode {
             SensorMode::Sleep => Ok(()),
             SensorMode::Forced => {
                 // Change to forced mode. Last two bits=01.
                 control_register.set_mode(SensorMode::Forced);
-                debug!("Setting control register to: {control_register:?}");
+                debug!("Setting control register to: {:?}", control_register);
                 self.set_register(ADDR_CONTROL_MODE, control_register.0)
             }
         }
@@ -206,8 +207,8 @@ where
     ) -> Result<(), BmeError<I2C>> {
         let gas_wait = gas_config.calc_gas_wait();
         let res_heat = gas_config.calc_res_heat(calibration_data, self.ambient_temperature);
-        debug!("Setting gas_wait_0 to {gas_wait}");
-        debug!("Setting res_heat_0 to {res_heat}");
+        debug!("Setting gas_wait_0 to {}", gas_wait);
+        debug!("Setting res_heat_0 to {}", res_heat);
         self.set_register(ADDR_GAS_WAIT_0, gas_wait)?;
         self.set_register(ADDR_RES_HEAT_0, res_heat)?;
         Ok(())

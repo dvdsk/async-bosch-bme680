@@ -74,7 +74,7 @@ impl From<GasWaitDuration> for Duration {
 
 // Ctrl_meas content. Register 0x74
 bitfield! {
-    pub struct CtrlMeasurment(u8);
+    pub struct CtrlMeasurement(u8);
     impl Debug;
     u8;
     pub from into Oversampling, temperature_os, set_temperature_os: 7, 5;
@@ -83,7 +83,7 @@ bitfield! {
 }
 
 bitfield! {
-    pub struct MeasurmentStatus(u8);
+    pub struct MeasurementStatus(u8);
     impl Debug;
     u8;
     pub bool, new_data, _: 7;
@@ -113,16 +113,16 @@ bitfield! {
     impl Debug;
 
     pub u8, gas_range, _: calc_position(3, 14), calc_position(0, 14);
-    // Each measuring cycle contains a  gas measurment slot, either a real one or a dummy one.
-    // gas_valid indicates wether a real gas conversion (i.e. not a dummy one) is returned.
+    // Each measuring cycle contains a  gas measurement slot, either a real one or a dummy one.
+    // gas_valid indicates whether a real gas conversion (i.e. not a dummy one) is returned.
     pub bool, gas_valid, _: calc_position(5, 14);
     // Indicates if the heater target temperature was reached
     pub bool, heater_sable, _: calc_position(4, 14);
     pub u16, from into GasADC, gas_adc, _: calc_position(7, 14), calc_position(0, 13);
     pub u16, from into Humidity, humidity_adc, _: calc_position(7, 9), calc_position(0, 8);
-    pub u32, from into Measurment, temperature_adc, _: calc_position(7, 7), calc_position(0, 5);
-    pub u32, from into Measurment, pressure_adc, _: calc_position(7, 4), calc_position(0, 2);
-    // measurment status
+    pub u32, from into Measurement, temperature_adc, _: calc_position(7, 7), calc_position(0, 5);
+    pub u32, from into Measurement, pressure_adc, _: calc_position(7, 4), calc_position(0, 2);
+    // measurement status
     // up to 10 conversions numbered from 0 to 9
     pub u8, gas_meas_index, _: calc_position(3, 0), calc_position(0, 0);
     // true if measuring is not done yet
@@ -135,11 +135,11 @@ bitfield! {
 
 /// Temperature/Pressure adc values. 20 bits consisting of msb, lsb, xlsb
 #[derive(Debug)]
-pub struct Measurment(pub u32);
-impl From<u32> for Measurment {
+pub struct Measurement(pub u32);
+impl From<u32> for Measurement {
     fn from(value: u32) -> Self {
-        let measurment_value = u32::from_be(value) >> 12;
-        Measurment(measurment_value)
+        let measurement_value = u32::from_be(value) >> 12;
+        Measurement(measurement_value)
     }
 }
 
@@ -179,13 +179,13 @@ mod tests {
     use crate::config::Configuration;
     use std::println;
 
-    use super::{calc_position, Humidity, Measurment, RawConfig, RawData};
+    use super::{calc_position, Humidity, Measurement, RawConfig, RawData};
     use bitfield::bitfield;
 
     bitfield! {
         pub struct SampleData([u8]);
         impl Debug;
-        pub u32, from into Measurment, m, _: calc_position(7, 2), calc_position(0, 0);
+        pub u32, from into Measurement, m, _: calc_position(7, 2), calc_position(0, 0);
         pub u16, from into Humidity, h, _: calc_position(7,4), calc_position(0, 3);
     }
 
@@ -247,14 +247,14 @@ mod tests {
     }
 
     #[test]
-    fn test_measurment_and_humidty() {
+    fn test_measurement_and_humidty() {
         // 2.5 bytes msb, lsb, xlsb 2 bytes msb, lsb
         let data = [0b00101001, 0b10110011, 0b1111_0000, 0b10110011, 0b00101001];
-        let expected_measurment_value = 0b0000_00000000_00101001_10110011_1111_u32;
+        let expected_measurement_value = 0b0000_00000000_00101001_10110011_1111_u32;
         let expected_humidity = 0b10110011_00101001_u16;
-        let measurment = SampleData(data);
-        assert!(expected_measurment_value == measurment.m().0);
-        assert!(expected_humidity == measurment.h().0);
+        let measurement = SampleData(data);
+        assert!(expected_measurement_value == measurement.m().0);
+        assert!(expected_humidity == measurement.h().0);
     }
     #[test]
     fn test_assemble() {
@@ -289,7 +289,7 @@ mod tests {
             // 0x75 filter coeff 1
             0b000_001_00,
         ];
-        println!("Expeced data: {expected_raw_data:?}");
+        println!("Expected data: {expected_raw_data:?}");
         println!("Actual raw data: {raw_data:?}");
         assert!(expected_raw_data == raw_data);
     }
