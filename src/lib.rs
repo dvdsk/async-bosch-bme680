@@ -48,8 +48,7 @@ pub struct Bme680<I2C, D> {
 impl<I2C, D> Bme680<I2C, D>
 where
     I2C: I2c<SevenBitAddress>,
-    // <I2C as WriteRead>::Error: core::fmt::Debug,
-    // <I2C as Write>::Error: core::fmt::Debug,
+    I2C::Error: defmt::Format,
     D: DelayNs,
 {
     /// Creates a new instance of the Sensor

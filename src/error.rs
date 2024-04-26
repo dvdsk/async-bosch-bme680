@@ -4,6 +4,7 @@ use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 pub enum BmeError<I2C>
 where
     I2C: I2c<SevenBitAddress>,
+    I2C::Error: defmt::Format,
 {
     /// Error during I2C write operation.
     WriteError(I2C::Error),

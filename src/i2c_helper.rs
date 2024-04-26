@@ -36,6 +36,7 @@ pub struct I2CHelper<I2C, D> {
 impl<I2C, D> I2CHelper<I2C, D>
 where
     I2C: I2c<SevenBitAddress>,
+    I2C::Error: defmt::Format,
     D: DelayNs,
 {
     pub async fn new(
