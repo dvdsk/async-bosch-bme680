@@ -1,5 +1,6 @@
 /// All possible errors
-#[cfg_attr(feature = "thiserror", derive(thiserror::Error, Debug))]
+#[derive(Debug)]
+#[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub enum BmeError<E> {
     #[cfg_attr(feature = "thiserror", error("Error during I2C write operation: {0}"))]
