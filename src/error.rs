@@ -3,10 +3,6 @@ use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 /// All possible errors
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(
-    feature = "postcard",
-    derive(postcard::experimental::max_size::MaxSize)
-)]
 pub enum BmeError<I2C>
 where
     I2C: I2c<SevenBitAddress>,
@@ -32,7 +28,11 @@ where
 }
 
 #[cfg(feature = "postcard")]
-impl<I2C> postcard::experimental::max_size::MaxSize for BmeError<I2C> {
+impl<I2C> postcard::experimental::max_size::MaxSize for BmeError<I2C> 
+where
+    I2C: I2c<SevenBitAddress>,
+    I2C::Error: defmt::Format,
+{
     // this is unrealistically large. It might still be too small if the
     // I2C::Error has an absurd amount of data in it
     const POSTCARD_MAX_SIZE: usize = 10;
