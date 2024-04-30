@@ -1,19 +1,33 @@
 use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 
 /// All possible errors
+#[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "postcard",
+    derive(postcard::experimental::max_size::MaxSize)
+)]
 pub enum BmeError<I2C>
 where
     I2C: I2c<SevenBitAddress>,
     I2C::Error: defmt::Format,
 {
-    /// Error during I2C write operation.
+    #[cfg_attr(feature = "thiserror", error("Error during I2C write operation."))]
     WriteError(I2C::Error),
-    /// Error during I2C WriteRead operation.
+    #[cfg_attr(feature = "thiserror", error("Error during I2C WriteRead operation."))]
     WriteReadError(I2C::Error),
-    /// Got an unexpected ChipId during sensor initialization.
+    #[cfg_attr(
+        feature = "thiserror",
+        error("Got an unexpected ChipId during sensor initialization.")
+    )]
     UnexpectedChipId(u8),
-    /// After running the measurement the sensor blocks until the 'new data bit' of the sensor is set.
-    /// Should this take more than 5 tries an error is returned instead of incorrect data.
+    #[cfg_attr(feature = "thiserror", error("After running the measurement the sensor blocks until the 'new data bit' of the sensor is set."))]
+    #[cfg_attr(
+        feature = "thiserror",
+        error(
+            "Should this take more than 5 tries an error is returned instead of incorrect data."
+        )
+    )]
     MeasuringTimeOut,
 }
 
