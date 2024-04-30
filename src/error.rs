@@ -1,10 +1,7 @@
 /// All possible errors
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-pub enum BmeError<E>
-where
-    E: defmt::Format,
-{
+pub enum BmeError<E> {
     #[cfg_attr(feature = "thiserror", error("Error during I2C write operation: {0}"))]
     WriteError(E),
     #[cfg_attr(
@@ -25,14 +22,11 @@ where
 }
 
 #[cfg(feature = "postcard")]
-impl<I2C> postcard::experimental::max_size::MaxSize for BmeError<I2C::Error>
+impl<E> postcard::experimental::max_size::MaxSize for BmeError<E>
 where
-    I2C: I2c<SevenBitAddress>,
-    I2C::Error: defmt::Format,
+    E: postcard::experimental::max_size::MaxSize,
 {
-    // this is unrealistically large. It might still be too small if the
-    // I2C::Error has an absurd amount of data in it
-    const POSTCARD_MAX_SIZE: usize = 10;
+    const POSTCARD_MAX_SIZE: usize = 1 + E::POSTCARD_MAX_SIZE;
 }
 
 impl<E> defmt::Format for BmeError<E>
