@@ -1,10 +1,10 @@
 use core::fmt;
 
 /// All possible errors
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-pub enum BmeError<E: Clone + fmt::Debug> {
+pub enum BmeError<E: fmt::Debug> {
     #[cfg_attr(feature = "thiserror", error("Error during I2C write operation: {0}"))]
     WriteError(E),
     #[cfg_attr(
@@ -24,17 +24,28 @@ pub enum BmeError<E: Clone + fmt::Debug> {
     MeasuringTimeOut,
 }
 
+impl<E> Clone for BmeError<E> where E: defmt::Format + fmt::Debug + Clone {
+    fn clone(&self) -> Self {
+        match self {
+            BmeError::WriteError(e) => BmeError::WriteError(e.clone()),
+            BmeError::WriteReadError(e) => BmeError::WriteReadError(e.clone()),
+            BmeError::UnexpectedChipId(id) => BmeError::UnexpectedChipId(*id),
+            BmeError::MeasuringTimeOut => BmeError::MeasuringTimeOut,
+        }
+    }
+}
+
 #[cfg(feature = "postcard")]
 impl<E> postcard::experimental::max_size::MaxSize for BmeError<E>
 where
-    E: postcard::experimental::max_size::MaxSize + Clone + fmt::Debug,
+    E: postcard::experimental::max_size::MaxSize + fmt::Debug,
 {
     const POSTCARD_MAX_SIZE: usize = 1 + E::POSTCARD_MAX_SIZE;
 }
 
 impl<E> defmt::Format for BmeError<E>
 where
-    E: defmt::Format + Clone + fmt::Debug,
+    E: defmt::Format + fmt::Debug,
 {
     fn format(&self, fmt: defmt::Formatter) {
         match self {
