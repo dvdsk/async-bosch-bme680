@@ -1,20 +1,17 @@
-use embedded_hal_async::i2c::{I2c, SevenBitAddress};
-
 /// All possible errors
 #[cfg_attr(feature = "thiserror", derive(thiserror::Error))]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-pub enum BmeError<I2C>
+pub enum BmeError<E>
 where
-    I2C: I2c<SevenBitAddress>,
-    I2C::Error: defmt::Format,
+    E: defmt::Format,
 {
     #[cfg_attr(feature = "thiserror", error("Error during I2C write operation: {0}"))]
-    WriteError(I2C::Error),
+    WriteError(E),
     #[cfg_attr(
         feature = "thiserror",
         error("Error during I2C WriteRead operation: {0}")
     )]
-    WriteReadError(I2C::Error),
+    WriteReadError(E),
     #[cfg_attr(
         feature = "thiserror",
         error("Got an unexpected ChipId during sensor initialization. Got id: {0}")
@@ -28,7 +25,7 @@ where
 }
 
 #[cfg(feature = "postcard")]
-impl<I2C> postcard::experimental::max_size::MaxSize for BmeError<I2C> 
+impl<I2C> postcard::experimental::max_size::MaxSize for BmeError<I2C::Error>
 where
     I2C: I2c<SevenBitAddress>,
     I2C::Error: defmt::Format,
@@ -38,10 +35,9 @@ where
     const POSTCARD_MAX_SIZE: usize = 10;
 }
 
-impl<I2C> defmt::Format for BmeError<I2C>
+impl<E> defmt::Format for BmeError<E>
 where
-    I2C: I2c<SevenBitAddress>,
-    I2C::Error: defmt::Format,
+    E: defmt::Format,
 {
     fn format(&self, fmt: defmt::Formatter) {
         match self {

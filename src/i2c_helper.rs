@@ -44,7 +44,7 @@ where
         device_address: DeviceAddress,
         delayer: D,
         ambient_temperature: i32,
-    ) -> Result<Self, BmeError<I2C>> {
+    ) -> Result<Self, BmeError<I2C::Error>> {
         Self {
             i2c_interface,
             address: device_address.into(),
@@ -62,7 +62,7 @@ where
     pub async fn delay(&mut self, duration_us: u32) {
         self.delayer.delay_us(duration_us).await;
     }
-    async fn get_register(&mut self, address: u8) -> Result<u8, BmeError<I2C>> {
+    async fn get_register(&mut self, address: u8) -> Result<u8, BmeError<I2C::Error>> {
         debug!("    Getting register: {:x}.", address);
         let mut buffer = [0; 1];
         self.i2c_interface
@@ -75,7 +75,7 @@ where
         &mut self,
         address: u8,
         buffer: &mut [u8],
-    ) -> Result<(), BmeError<I2C>> {
+    ) -> Result<(), BmeError<I2C::Error>> {
         debug!(
             "   Getting register: {:x} to {:x}. Length {} bytes.",
             address,
@@ -88,7 +88,7 @@ where
             .map_err(BmeError::WriteReadError)?;
         Ok(())
     }
-    async fn set_register(&mut self, address: u8, value: u8) -> Result<(), BmeError<I2C>> {
+    async fn set_register(&mut self, address: u8, value: u8) -> Result<(), BmeError<I2C::Error>> {
         debug!("    Setting register {:x} to {:b}", address, value);
         self.i2c_interface
             .write(self.address, &[address, value])
@@ -100,14 +100,14 @@ where
     async fn set_registers_iter<'a>(
         &mut self,
         register_pairs: impl Iterator<Item = (&'a u8, &'a u8)>,
-    ) -> Result<(), BmeError<I2C>> {
+    ) -> Result<(), BmeError<I2C::Error>> {
         for (address, value) in register_pairs {
             self.set_register(*address, *value).await?;
         }
         Ok(())
     }
     /// Soft resets and checks device if device id matches the expected device id
-    async fn init(mut self) -> Result<Self, BmeError<I2C>> {
+    async fn init(mut self) -> Result<Self, BmeError<I2C::Error>> {
         self.soft_reset().await?;
         self.delayer.delay_ms(DELAY_PERIOD_US).await;
         let chip_id = self.get_chip_id().await?;
@@ -117,20 +117,20 @@ where
             Ok(self)
         }
     }
-    pub async fn soft_reset(&mut self) -> Result<(), BmeError<I2C>> {
+    pub async fn soft_reset(&mut self) -> Result<(), BmeError<I2C::Error>> {
         debug!("Soft resetting");
         self.set_register(ADDR_SOFT_RESET, CMD_SOFT_RESET).await
     }
-    async fn get_chip_id(&mut self) -> Result<u8, BmeError<I2C>> {
+    async fn get_chip_id(&mut self) -> Result<u8, BmeError<I2C::Error>> {
         debug!("Getting chip id");
         self.get_register(ADDR_CHIP_ID).await
     }
-    pub async fn get_variant_id(&mut self) -> Result<Variant, BmeError<I2C>> {
+    pub async fn get_variant_id(&mut self) -> Result<Variant, BmeError<I2C::Error>> {
         debug!("Getting variant id");
         Ok(self.get_register(ADDR_VARIANT_ID).await?.into())
     }
     // fills buffer with content from 3 separate reads
-    pub async fn get_calibration_data(&mut self) -> Result<CalibrationData, BmeError<I2C>> {
+    pub async fn get_calibration_data(&mut self) -> Result<CalibrationData, BmeError<I2C::Error>> {
         debug!("Getting calibration data");
         let mut coeff_buffer = [0; LEN_COEFF_ALL];
         // fill coeff buffer
@@ -149,7 +149,7 @@ where
         Ok(extract_calibration_data(coeff_buffer))
     }
     /// Puts the sensor to sleep and adjusts SensorMode afterwards
-    pub async fn set_mode(&mut self, mode: SensorMode) -> Result<(), BmeError<I2C>> {
+    pub async fn set_mode(&mut self, mode: SensorMode) -> Result<(), BmeError<I2C::Error>> {
         // 1. Read ctr_meas register
         // 2. Set last 2 bits to 00 (sleep) if not already in sleep mode
         // 3. Set last 2 bits to 01 (forced) if the requested mode is forced. Do nothing if the requested mode is sleep,
@@ -187,7 +187,7 @@ where
             }
         }
     }
-    pub async fn get_config(&mut self) -> Result<RawConfig<[u8; LEN_CONFIG]>, BmeError<I2C>> {
+    pub async fn get_config(&mut self) -> Result<RawConfig<[u8; LEN_CONFIG]>, BmeError<I2C::Error>> {
         debug!("Getting config");
         let mut buffer = [0; LEN_CONFIG];
         self.get_registers(ADDR_CONFIG, &mut buffer).await?;
@@ -199,7 +199,7 @@ where
         &mut self,
         conf: &Configuration,
         calibration_data: &CalibrationData,
-    ) -> Result<RawConfig<[u8; LEN_CONFIG]>, BmeError<I2C>> {
+    ) -> Result<RawConfig<[u8; LEN_CONFIG]>, BmeError<I2C::Error>> {
         let mut current_conf = self.get_config().await?;
         current_conf.apply_config(conf);
 
@@ -215,7 +215,7 @@ where
         &mut self,
         gas_config: &GasConfig,
         calibration_data: &CalibrationData,
-    ) -> Result<(), BmeError<I2C>> {
+    ) -> Result<(), BmeError<I2C::Error>> {
         let gas_wait = gas_config.calc_gas_wait();
         let res_heat = gas_config.calc_res_heat(calibration_data, self.ambient_temperature);
         debug!("Setting gas_wait_0 to {}", gas_wait);
@@ -225,7 +225,7 @@ where
         Ok(())
     }
     /// Get raw sensor data. 15 bytes starting at 0x1D
-    pub async fn get_field_data(&mut self) -> Result<RawData<[u8; 15]>, BmeError<I2C>> {
+    pub async fn get_field_data(&mut self) -> Result<RawData<[u8; 15]>, BmeError<I2C::Error>> {
         let mut buffer: [u8; 15] = [0; 15];
         self.get_registers(ADDR_SENSOR_RESULT, &mut buffer).await?;
         Ok(RawData(buffer))
