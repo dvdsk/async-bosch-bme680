@@ -12,23 +12,30 @@ where
     I2C: I2c<SevenBitAddress>,
     I2C::Error: defmt::Format,
 {
-    #[cfg_attr(feature = "thiserror", error("Error during I2C write operation."))]
+    #[cfg_attr(feature = "thiserror", error("Error during I2C write operation: {0}"))]
     WriteError(I2C::Error),
-    #[cfg_attr(feature = "thiserror", error("Error during I2C WriteRead operation."))]
+    #[cfg_attr(
+        feature = "thiserror",
+        error("Error during I2C WriteRead operation: {0}")
+    )]
     WriteReadError(I2C::Error),
     #[cfg_attr(
         feature = "thiserror",
-        error("Got an unexpected ChipId during sensor initialization.")
+        error("Got an unexpected ChipId during sensor initialization. Got id: {0}")
     )]
     UnexpectedChipId(u8),
-    #[cfg_attr(feature = "thiserror", error("After running the measurement the sensor blocks until the 'new data bit' of the sensor is set."))]
     #[cfg_attr(
         feature = "thiserror",
-        error(
-            "Should this take more than 5 tries an error is returned instead of incorrect data."
-        )
+        error("Waiting for the `new data bit` is taking to long")
     )]
     MeasuringTimeOut,
+}
+
+#[cfg(feature = "postcard")]
+impl<I2C> postcard::experimental::max_size::MaxSize for BmeError<I2C> {
+    // this is unrealistically large. It might still be too small if the
+    // I2C::Error has an absurd amount of data in it
+    const POSTCARD_MAX_SIZE: usize = 10;
 }
 
 impl<I2C> defmt::Format for BmeError<I2C>
