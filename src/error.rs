@@ -24,7 +24,10 @@ pub enum BmeError<E: fmt::Debug> {
     MeasuringTimeOut,
 }
 
-impl<E> Clone for BmeError<E> where E: defmt::Format + fmt::Debug + Clone {
+impl<E> Clone for BmeError<E>
+where
+    E: defmt::Format + fmt::Debug + Clone,
+{
     fn clone(&self) -> Self {
         match self {
             BmeError::WriteError(e) => BmeError::WriteError(e.clone()),
@@ -55,6 +58,25 @@ where
                 defmt::write!(fmt, "Got unimplemented chip id: {}", chip_id)
             }
             BmeError::MeasuringTimeOut => defmt::write!(fmt, "Timed out while waiting for new measurement values. Either no new data or the sensor took unexpectedly long to finish measuring."),
+        }
+    }
+}
+
+impl<E> Eq for BmeError<E> where E: Eq + defmt::Format + fmt::Debug {}
+
+impl<E> PartialEq for BmeError<E>
+where
+    E: PartialEq + defmt::Format + fmt::Debug,
+{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::WriteReadError(e), Self::WriteReadError(e2)) => e == e2,
+            (Self::WriteError(e), Self::WriteError(e2)) => e == e2,
+            (Self::UnexpectedChipId(chip_id), Self::UnexpectedChipId(chip_id2)) => {
+                chip_id == chip_id2
+            }
+            (Self::MeasuringTimeOut, Self::MeasuringTimeOut) => true,
+            (_, _) => false,
         }
     }
 }
