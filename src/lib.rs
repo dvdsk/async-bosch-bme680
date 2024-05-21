@@ -6,9 +6,7 @@
 //! The [official](https://github.com/BoschSensortec/BME68x-Sensor-API/) c implementation from Bosch was used as a reference.
 //!
 //! For further information about the sensors capabilities and settings refer to the official [product page](https://www.bosch-sensortec.com/products/environmental-sensors/gas-sensors/bme680/).
-
-// TODO add example here
-#![no_std]
+#![cfg_attr(not(feature = "thiserror"), no_std)]
 #![forbid(unsafe_code)]
 
 use self::config::{SensorMode, Variant};
